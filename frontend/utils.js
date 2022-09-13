@@ -78,6 +78,26 @@ export async function initContract() {
     }
   );
 
+  window.nearcondao = await new Contract(
+    window.walletConnection.account(),
+    "nearcondao.testnet",
+    {
+      viewMethods: [
+        "get_proposals",
+        "get_specific_proposal",
+        "get_end_time",
+        "get_votes_for",
+        "get_votes_against",
+        "get_nember_votes",
+        "check_the_proposal"
+      ],
+      changeMethods: [
+        "create_proposal",
+        "add_vote",
+      ],
+    }
+  );
+
   window.stake = await new Contract(
     window.walletConnection.account(),
     "lightencywallet.testnet",
