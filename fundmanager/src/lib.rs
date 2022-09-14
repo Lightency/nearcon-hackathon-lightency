@@ -143,16 +143,22 @@ impl FundsManager {
             .ft_transfer("lightencytreasury.testnet".to_string().try_into().unwrap(), amount.to_string(),"".to_string());
     }
 
-    pub fn from_stcoin_lts (&self, supply:u128 , s:u128) -> u128{
-        let sup= supply as f64;
-        let stablecoin= s as f64;
-        let c1= 0.000004;
-        let c2= -1200000 as f64;
-        let expo1= (c1 * stablecoin).exp();
-        let expo2= (c1 * (sup - c2)).exp();
-        let ln1=(expo1 * (expo2 + 1.0) - 1.0).ln();
-        let q1= (1.0/c1) * ln1 + c2;
-        (q1 - sup) as u128
+    pub fn primitive (&self, x:u128) -> f64 {
+        1.0/3.0 * (x as f64).powi(3)
+    }
+
+    pub fn get_num_tokens_minted (&self, amount: u128, supply:u128) -> f64 {
+        let primitive_new_supply = amount as f64 + self.primitive(supply);
+        let new_supply= (primitive_new_supply * 3.0).powf(1.0/3.0);
+        env::log_str(primitive_new_supply.to_string().as_str());
+        new_supply
+    }
+
+    pub fn get_num_tokens_burned (&self,amount: u128, supply:u128) -> f64 {
+        let primitive_new_supply = self.primitive(supply) - amount as f64;
+        let new_supply= (primitive_new_supply * 3.0).powf(1.0/3.0);
+        env::log_str(primitive_new_supply.to_string().as_str());
+        new_supply
     }
 
 }
