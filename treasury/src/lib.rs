@@ -51,6 +51,11 @@ impl TreasuryContract {
         self.near_balance = env::account_balance();
     }
 
+    pub fn get_near_balance (&self) -> u128 {
+        let balance=env::account_balance();
+        balance
+    }
+
     // set_lts_balance
 
     // funtion that pay near to an account

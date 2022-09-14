@@ -149,8 +149,10 @@ impl FundsManager {
 
     pub fn get_num_tokens_minted (&self, amount: u128, supply:u128) -> f64 {
         let primitive_new_supply = amount as f64 + self.primitive(supply);
+
         let new_supply= (primitive_new_supply * 3.0).powf(1.0/3.0);
         env::log_str(primitive_new_supply.to_string().as_str());
+        
         new_supply
     }
 
