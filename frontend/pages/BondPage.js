@@ -104,7 +104,7 @@ const BondPage = () => {
 
   const [proposalType, setProposalType] = useState([])
 
-  proposalsTypeArray = [
+  let proposalsTypeArray = [
     { name: 'Buy Light tokens', value: '1' },
     { name: 'Sell Light tokens', value: '2' },
     { name: 'Fund project', value: '3' },
