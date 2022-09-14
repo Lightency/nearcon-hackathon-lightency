@@ -10,7 +10,7 @@ const Navbar = ({ logout, login }) => {
     <NavbarContainer>
       <RightContainer>
         {window.walletConnection.isSignedIn() ? (
-          <ConnectButton onClick={logout}>
+          <ConnectButton onClick={logout} >
             <GrConnect style={{ marginRight: '8px' }} />
             {window.accountId}
           </ConnectButton>

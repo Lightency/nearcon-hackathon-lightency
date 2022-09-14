@@ -21,6 +21,7 @@
     "@parcel/transformer-css": "^2.7.0",
     "bootstrap": "^5.2.0",
     "formik": "^2.2.9",
+    "near-api-js": "^1.0.0",
     "parcel": "^2.7.0",
     "primeicons": "^5.0.0",
     "primereact": "^8.4.0",

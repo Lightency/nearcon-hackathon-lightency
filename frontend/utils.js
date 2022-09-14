@@ -4,13 +4,13 @@ import {
   keyStores,
   WalletConnection,
   nearAPI,
-} from "near-api-js";
-import { async } from "regenerator-runtime";
-import getConfig from "./config";
+} from 'near-api-js'
+import { async } from 'regenerator-runtime'
+import getConfig from './config'
 
-const nearConfig = getConfig("development");
+const nearConfig = getConfig('development')
 
-console.log(`Using config: ${JSON.stringify(nearConfig, null, 2)}`);
+console.log(`Using config: ${JSON.stringify(nearConfig, null, 2)}`)
 
 // Initialize contract & set global variables
 export async function initContract() {
@@ -18,16 +18,16 @@ export async function initContract() {
   const near = await connect(
     Object.assign(
       { deps: { keyStore: new keyStores.BrowserLocalStorageKeyStore() } },
-      nearConfig
-    )
-  );
+      nearConfig,
+    ),
+  )
 
   // Initializing Wallet based Account. It can work with NEAR testnet wallet that
   // is hosted at https://wallet.testnet.near.org
-  window.walletConnection = new WalletConnection(near);
+  window.walletConnection = new WalletConnection(near)
 
   // Getting the Account ID. If still unauthorized, it's just empty string
-  window.accountId = window.walletConnection.getAccountId();
+  window.accountId = window.walletConnection.getAccountId()
 
   // Initializing our contract APIs by contract name and configuration
   window.contract = await new Contract(
@@ -39,7 +39,8 @@ export async function initContract() {
         'get_greeting',
         'get_all_daos',
         'get_dao',
-        'get_all_proposals',,
+        'get_all_proposals',
+        ,
         'get_proposal',
         'get_end_time',
         'get_votes_for',
@@ -54,70 +55,91 @@ export async function initContract() {
         'add_vote',
         'check_the_proposal',
       ],
-    }
-  );
+    },
+  )
   window.energypool = await new Contract(
     window.walletConnection.account(),
-    "energie_pool.testnet",
+    'energie_pool.testnet',
     {
       viewMethods: [
-        "get_proposals",
-        "get_specific_proposal",
-        "get_end_time",
-        "get_votes_for",
-        "get_votes_against",
-        "get_nember_votes",
+        'get_proposals',
+        'get_specific_proposal',
+        'get_end_time',
+        'get_votes_for',
+        'get_votes_against',
+        'get_nember_votes',
       ],
       changeMethods: [
-        "add_member",
-        "remove_member",
-        "create_proposal",
-        "add_vote",
-        "check_and_send_near"
+        'add_member',
+        'remove_member',
+        'create_proposal',
+        'add_vote',
+        'check_and_send_near',
       ],
-    }
-  );
+    },
+  )
 
   window.nearcondao = await new Contract(
     window.walletConnection.account(),
-    "nearcondao.testnet",
+    'nearcondao.testnet',
     {
       viewMethods: [
-        "get_proposals",
-        "get_specific_proposal",
-        "get_end_time",
-        "get_votes_for",
-        "get_votes_against",
-        "get_nember_votes",
-        "check_the_proposal"
+        'get_proposals',
+        'get_specific_proposal',
+        'get_end_time',
+        'get_votes_for',
+        'get_votes_against',
+        'get_nember_votes',
+        'check_the_proposal',
       ],
+      changeMethods: ['create_proposal', 'add_vote'],
+    },
+  )
+
+  window.treasury = await new Contract(
+    window.walletConnection.account(),
+    'lightencytreasury.testnet',
+    {
+      viewMethods: ['get_near_balance'],
       changeMethods: [
-        "create_proposal",
-        "add_vote",
+        'get_lts_balance',
+        'deposit_crypto',
+        'transfer_lts',
+        'pay',
       ],
-    }
-  );
+    },
+  )
+
+  window.fund = await new Contract(
+    window.walletConnection.account(),
+    'lightencyswap.testnet',
+    {
+      viewMethods: ['get_num_tokens_minted', 'get_num_tokens_burned'],
+      changeMethods: [
+        'get_lts_balance',
+        'swap_near_wnear',
+        'swap',
+        'mint_lts',
+        'burn_token',
+        'transfer_lts',
+      ],
+    },
+  )
 
   window.stake = await new Contract(
     window.walletConnection.account(),
-    "lightencywallet.testnet",
+    'lightencywallet.testnet',
     {
-      viewMethods: [
-
-      ],
-      changeMethods: [
-        "stake",
-        "unstake",
-        "withdraw"
-      ],
-    }
-  );
+      viewMethods: [],
+      changeMethods: ['stake', 'unstake', 'withdraw'],
+    },
+  )
 }
 
 export function logout() {
-  window.walletConnection.signOut();
+  window.walletConnection.signOut()
   // reload page
-  window.location.replace(window.location.origin + window.location.pathname);
+  window.location.replace(window.location.origin + window.location.pathname)
 }
 
 export function login() {
@@ -125,17 +147,17 @@ export function login() {
   // user's behalf.
   // This works by creating a new access key for the user's account and storing
   // the private key in localStorage.
-  window.walletConnection.requestSignIn(nearConfig.contractName);
+  window.walletConnection.requestSignIn(nearConfig.contractName)
 }
 
-export async function set_greeting(message){
+export async function set_greeting(message) {
   let response = await window.contract.set_greeting({
-    args:{message: message}
+    args: { message: message },
   })
   return response
 }
 
-export async function get_greeting(){
+export async function get_greeting() {
   let greeting = await window.contract.get_greeting()
   return greeting
 }

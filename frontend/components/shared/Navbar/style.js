@@ -20,7 +20,7 @@ export const RightContainer = styled.div`
 
 export const ConnectButton = styled.button`
   margin-top: 0.2rem;
-  width: 10rem;
+  width: 18rem;
   height: 2rem;
   position: relative;
   background-color: #ffde00;
