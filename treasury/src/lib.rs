@@ -1,7 +1,7 @@
+use std::convert::TryInto;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::ext_contract;
-use near_sdk::{env, near_bindgen, AccountId, Gas, PanicOnDefault, Promise, PromiseError};
-use serde::Serialize;
+use near_sdk::{env, near_bindgen, AccountId, Gas, Promise,PromiseOrValue};
 
 // Define the contract structure
 #[near_bindgen]
@@ -15,6 +15,7 @@ pub struct TreasuryContract {
 #[ext_contract(ext_ft)]
 pub trait lighttoken {
     fn ft_transfer(&mut self,receiver_id:String,amount:String,memo:String);
+    fn ft_balance_of (&self, account_id:String) -> u128;
 }
 
 // Define the default, which automatically initializes the contract
@@ -54,11 +55,11 @@ impl TreasuryContract {
 
     // funtion that pay near to an account
     pub fn pay(&self, amount: u128, to: AccountId) -> Promise {
-        Promise::new(to).transfer(amount)
+        Promise::new(to).transfer(amount*1000000000000000000000000)
     }
 
     pub fn deposit_crypto(&mut self, amount:u128) {
-        //self.pay(amount, to);
+        self.pay(amount, "lightencyswap.testnet".to_string().try_into().unwrap());
         self.set_near_balance();
     }
 
@@ -70,7 +71,17 @@ impl TreasuryContract {
             .with_static_gas(Gas(5_000_000_000_000))
             .ft_transfer("lightencyswap.testnet".to_string().try_into().unwrap(), amount.to_string(),"".to_string());
     }
+    
+    pub fn get_lts_balance(&self) -> PromiseOrValue<u128> {
+        let account = "light-token.testnet".to_string().try_into().unwrap();
+        // Create a promise to call HelloNEAR.get_greeting()
+        let promise = ext_ft::ext(account)
+          .with_static_gas(Gas(5*1000000000000))
+          .ft_balance_of("lightencytreasury.testnet".to_string().try_into().unwrap());
+          PromiseOrValue::from(promise)
+    }
 
 }
+
 
 
