@@ -21,14 +21,14 @@ pub trait Rewardpool {
 pub trait Stakingpool {
     fn get_data(&self, account:String) -> Vec<Data>;
     fn get_totalstaked(&self) -> u128;
-    fn check_staker(&self,account:String) -> bool;
+    fn check_staker(&self,account:String) -> Promise;
 }
 
 #[ext_contract(this_contract)]
 trait Callbacks {
     fn get_data_callback(&self) -> Data;
     fn query_totalstaked_callback(&self) -> u128;
-    fn check_staker_callback(&self) -> bool;
+    fn check_staker_callback(&self, accountid:String) -> bool;
 }
 
 // Define the contract structure
@@ -36,6 +36,7 @@ trait Callbacks {
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct Rewardercontract {
     redeemers:UnorderedMap<String,u64>,
+    stakers:UnorderedMap<String,bool>,
     result1: bool,
 }
 
@@ -53,6 +54,7 @@ impl Rewardercontract {
         assert!(env::state_read::<Self>().is_none(), "Already initialized");
         Self {
             redeemers: UnorderedMap::new(b"m"),
+            stakers: UnorderedMap::new(b"n"),
             result1:false,
         }
     }
@@ -121,30 +123,35 @@ impl Rewardercontract {
 
     // ****** CHECK STAKER*****//
 
-    pub fn get_check_staker(&self, accountid:String) -> PromiseOrValue<bool> {
+    pub fn get_check_staker(&self, accountid:&String) -> Promise {
         let account = "lightencypool.testnet".to_string().try_into().unwrap();
+        
         // Create a promise to call HelloNEAR.get_greeting()
         let promise = ext_stakingpool::ext(account)
           .with_static_gas(Gas(5*1000000000000))
-          .check_staker(accountid);
-          PromiseOrValue::from(promise)
+          .check_staker(accountid.to_string());
+          //let account2=accountid;
         
-        // promise.then(Self::ext(env::current_account_id()).with_static_gas(Gas(5*1000000000000))
-        // .check_staker_callback())
+        return promise.then(
+            Self::ext(env::current_account_id())
+            .with_static_gas(Gas(5*1000000000000))
+            .check_staker_callback(&accountid))
     }
 
-    // Public - but only callable by env::current_account_id()
-    // pub fn check_staker_callback(&self, #[callback_result] call_result: Result<bool, PromiseError>) -> bool {
-    // // Check if the promise succeeded by calling the method outlined in external.rs
-    // if call_result.is_err() {
-    //     log!("There was an error contacting Hello NEAR");
-    //     return false;
-    // }
+    //Public - but only callable by env::current_account_id()
+     pub fn check_staker_callback(&mut self, #[callback_result] call_result: Result<bool, PromiseError>, accountid:&String) -> bool {
+     //Check if the promise succeeded by calling the method outlined in external.rs
+     if call_result.is_err() {
+        log!("There was an error contacting lightencypool.testnet contract");
+         return false;
+     }
 
-    // // Return the greeting
-    // let result = call_result.unwrap();
-    // result
-    // }
+     //Return the greeting
+     let result = call_result.unwrap();
+     self.stakers.insert(&accountid.to_string(),&result);
+     env::log_str(&self.stakers.get(accountid).unwrap().to_string());
+     result
+     }
 
 
 
@@ -153,6 +160,10 @@ impl Rewardercontract {
         ext_ft::ext(account)
             .with_static_gas(Gas(5 * 1000000000000))
             .pay(amount,to);
+    }
+
+    pub fn stake_test(&self, accountid:String){
+        env::log_str(&self.stakers.get(&accountid).unwrap().to_string());
     }
 
     pub fn pay (&mut self){
