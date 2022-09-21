@@ -20,14 +20,14 @@ pub trait Rewardpool {
 #[ext_contract(ext_stakingpool)]
 pub trait Stakingpool {
     fn get_data(&self, account:String) -> Vec<Data>;
-    fn get_totalstaked(&self) -> u128;
+    fn get_totalstaked(&self) -> Promise;
     fn check_staker(&self,account:String) -> Promise;
 }
 
 #[ext_contract(this_contract)]
 trait Callbacks {
     fn get_data_callback(&self) -> Data;
-    fn query_totalstaked_callback(&self) -> u128;
+    fn staking_pool_supply_callback(&self) -> u128;
     fn check_staker_callback(&self, accountid:String) -> bool;
 }
 
@@ -37,6 +37,7 @@ trait Callbacks {
 pub struct Rewardercontract {
     redeemers:UnorderedMap<String,u64>,
     stakers:UnorderedMap<String,bool>,
+    staking_pool_supply:UnorderedMap<String,u128>,
     result1: bool,
 }
 
@@ -55,6 +56,7 @@ impl Rewardercontract {
         Self {
             redeemers: UnorderedMap::new(b"m"),
             stakers: UnorderedMap::new(b"n"),
+            staking_pool_supply: UnorderedMap::new(b"c"),
             result1:false,
         }
     }
@@ -92,9 +94,9 @@ impl Rewardercontract {
     data
     }
 
-    // ****** GETTER TOTAL STAKED*****//
+    // ******Get Staking Pool Supply*****//
 
-    pub fn get_total_staked(&self) -> Promise {
+    pub fn get_staking_pool_supply(&self) -> Promise {
         let account = "lightencypool.testnet".to_string().try_into().unwrap();
         // Create a promise to call HelloNEAR.get_greeting()
         let promise = ext_stakingpool::ext(account)
@@ -104,12 +106,12 @@ impl Rewardercontract {
         return promise.then( // Create a promise to callback query_greeting_callback
           Self::ext(env::current_account_id())
           .with_static_gas(Gas(5*1000000000000))
-          .query_totalstaked_callback()
+          .staking_pool_supply_callback()
         )
     }
 
     #[private] // Public - but only callable by env::current_account_id()
-    pub fn query_totalstaked_callback(&self, #[callback_result] call_result: Result<u128, PromiseError>) -> u128 {
+    pub fn staking_pool_supply_callback(&mut self, #[callback_result] call_result: Result<u128, PromiseError>) -> u128 {
     // Check if the promise succeeded by calling the method outlined in external.rs
     if call_result.is_err() {
         log!("There was an error contacting Hello NEAR");
@@ -117,8 +119,10 @@ impl Rewardercontract {
     }
 
     // Return the greeting
-    let totalstaked: u128 = call_result.unwrap();
-    totalstaked
+    let result: u128 = call_result.unwrap();
+        self.staking_pool_supply.insert(&"staking_pool_supply".to_string(),&result);
+        env::log_str(&self.staking_pool_supply.get(&"staking_pool_supply".to_string()).unwrap().to_string());
+    result
     }
 
     // ****** CHECK STAKER*****//
@@ -162,8 +166,8 @@ impl Rewardercontract {
             .pay(amount,to);
     }
 
-    pub fn stake_test(&self, accountid:String){
-        env::log_str(&self.stakers.get(&accountid).unwrap().to_string());
+    pub fn stake_test(&self, accountid:String) -> bool{
+        return self.stakers.get(&accountid).unwrap()
     }
 
     pub fn pay (&mut self){
